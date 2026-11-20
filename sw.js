@@ -1,6 +1,6 @@
 // Offline support: serve the saved copy instantly, refresh it in the background.
 // Bump VERSION when publishing an update so old copies are cleared.
-const VERSION = 'flighter-v5';
+const VERSION = 'flighter-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
