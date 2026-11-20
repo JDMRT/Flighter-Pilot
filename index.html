@@ -1723,6 +1723,144 @@ const hot = window.claude?.hot;
 if (hot && hot.ready) hot.ready(boot); else boot(hot?.data ?? {});
 </script>
 
+<!-- App-only extras (GitHub Pages build): install guide for new players + share buttons -->
+<style>
+.install{z-index:60;background:var(--sea)}
+.install-panel{max-width:460px}
+.app-icon{display:block;width:72px;height:72px;border-radius:16px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.install-panel h2{margin-top:4px}
+.install-panel .lede{margin-top:10px}
+.steps{margin:16px 0 0;padding-left:22px;display:grid;gap:10px;font-size:17px;line-height:1.35}
+.steps b{color:var(--signal)}
+.share-ico{display:inline-block;width:18px;height:18px;vertical-align:-3px;fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.inapp-msg{margin:16px 0 0;font-size:17px;line-height:1.4}
+.linktxt{word-break:break-all;user-select:text;-webkit-user-select:text}
+.install .btn-row{margin-top:18px}
+.linkbtn{display:block;margin-top:18px;background:none;border:0;padding:6px 0;color:var(--muted);text-decoration:underline;font-size:16px;cursor:pointer}
+.ios-arrow{position:fixed;left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;justify-items:center;color:var(--signal);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
+.ios-arrow svg{width:34px;height:34px;fill:var(--signal);animation:bob 1.1s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.ios-arrow svg{animation:none}}
+.ghost.small{padding:8px 14px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;max-width:calc(100% - 32px);background:var(--panel);border:2px solid var(--signal);border-radius:12px;padding:10px 16px;font-weight:700;font-size:15px;text-align:center}
+@media (max-height:500px){
+  .install-panel{max-width:620px;display:grid;grid-template-columns:auto 1fr;column-gap:18px}
+  .install-panel > *{grid-column:2}
+  .install-panel .app-icon{grid-column:1;grid-row:1 / span 3;width:60px;height:60px}
+  .steps{font-size:15px;gap:6px;margin-top:10px}
+  .ghost.small{padding:6px 10px;font-size:12px}
+  .install-panel h2{font-size:26px}
+  .install-panel .lede{font-size:14px;margin-top:6px}
+  .linkbtn{margin-top:8px}
+  .ios-arrow{display:none}
+}
+</style>
+
+<section id="install" class="overlay install" hidden>
+  <div class="panel install-panel">
+    <img class="app-icon" src="icon-192.png" alt="">
+    <p class="eyebrow">Get the best experience</p>
+    <h2>Install Flighter Pilot</h2>
+    <p class="lede">Add it to your home screen. It opens fullscreen with no browser bars, works offline and keeps your best score.</p>
+
+    <div id="instAndroid" hidden>
+      <div class="btn-row" id="instBtnRow"><button id="instBtn" class="primary" type="button">Install app</button></div>
+      <ol class="steps" id="instAndroidSteps" hidden>
+        <li>Tap the <b>⋮</b> menu at the top right of your browser</li>
+        <li>Tap <b>Install app</b> (or <b>Add to Home screen</b>)</li>
+        <li>Open <b>Flighter Pilot</b> from your home screen</li>
+      </ol>
+    </div>
+
+    <ol class="steps" id="instIos" hidden>
+      <li>Tap the <b>Share</b> button <svg class="share-ico" viewBox="0 0 24 24" aria-label="share icon"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v9h14v-9"/></svg> in the toolbar (on newer iPhones it's inside the <b>⋯</b> button)</li>
+      <li>Scroll down and tap <b>Add to Home Screen</b></li>
+      <li>Tap <b>Add</b>, then open <b>Flighter Pilot</b> from your home screen</li>
+    </ol>
+
+    <div id="instInApp" hidden>
+      <p class="inapp-msg">This app's built-in browser can't install games. Open the link in <b>Safari</b> or <b>Chrome</b> first: tap the <b>⋯</b> menu and choose <b>Open in browser</b>, or copy the link and paste it there.</p>
+      <div class="btn-row"><button id="copyBtn" class="primary" type="button">Copy link</button></div>
+      <p class="note linktxt" id="linkTxt"></p>
+    </div>
+
+    <button id="instSkip" class="linkbtn" type="button">Play in browser instead</button>
+  </div>
+  <div class="ios-arrow" id="iosArrow" hidden>Share is down here<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 4 12h5V3h6v9h5z"/></svg></div>
+</section>
+
+<script>
+(() => {
+  const ua = navigator.userAgent;
+  const isStandalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const iphone = /iPhone|iPod/.test(ua);
+  const android = /Android/i.test(ua);
+  const mobile = ios || android;
+  const inApp = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|TikTok|BytedanceWebview|musical_ly|Snapchat|Discord|Line\/|LinkedInApp|Twitter/i.test(ua);
+  const SKIP = 'flighter.installSkip';
+  const getKey = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const setKey = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const url = location.origin + location.pathname;
+  let deferred = null, toastT = 0;
+
+  function toast(msg, ms = 3000) {
+    let t = document.getElementById('toast');
+    if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms);
+  }
+  async function copy(text, msg) {
+    try { await navigator.clipboard.writeText(text); toast(msg); }
+    catch (e) { toast('Copy this link: ' + text, 7000); }
+  }
+  function share(score) {
+    const text = (score ? `I scored ${fmt(score)} in Flighter Pilot ✈️ Can you beat it?` : 'Play Flighter Pilot ✈️ endless air combat, right in your browser.')
+      + ' Tip: add it to your home screen for fullscreen.';
+    if (navigator.share && mobile) navigator.share({ title: 'Flighter Pilot', text, url }).catch(() => {});
+    else copy(text + ' ' + url, 'Link copied. Send it to a friend!');
+  }
+
+  function showAndroid() {
+    document.getElementById('instBtnRow').hidden = !deferred;
+    document.getElementById('instAndroidSteps').hidden = !!deferred;
+  }
+  function openInstall() {
+    document.getElementById('instAndroid').hidden = !(android && !inApp);
+    document.getElementById('instIos').hidden = !(ios && !inApp);
+    document.getElementById('instInApp').hidden = !inApp;
+    document.getElementById('iosArrow').hidden = !(iphone && !inApp);
+    document.getElementById('linkTxt').textContent = url;
+    if (android && !inApp) showAndroid();
+    document.getElementById('install').hidden = false;
+  }
+  function closeInstall() { document.getElementById('install').hidden = true; }
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if (!document.getElementById('install').hidden) showAndroid(); updateMenuBtn(); });
+  window.addEventListener('appinstalled', () => { closeInstall(); updateMenuBtn(); toast('Installed! Open Flighter Pilot from your home screen.', 5000); });
+  document.getElementById('instBtn').addEventListener('click', async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    const choice = await deferred.userChoice.catch(() => null);
+    deferred = null;
+    if (choice && choice.outcome === 'accepted') closeInstall(); else showAndroid();
+  });
+  document.getElementById('instSkip').addEventListener('click', () => { setKey(SKIP, '1'); closeInstall(); });
+  document.getElementById('copyBtn').addEventListener('click', () => copy(url, 'Link copied. Paste it into Safari or Chrome.'));
+
+  // share + install buttons on the title and game-over screens
+  const mk = (id, label, parent) => { const b = document.createElement('button'); b.id = id; b.type = 'button'; b.className = 'ghost small'; b.textContent = label; parent.appendChild(b); return b; };
+  mk('shareBtn', 'Share', document.getElementById('startBtn').parentElement).addEventListener('click', () => share(0));
+  mk('shareScoreBtn', 'Share score', document.getElementById('againBtn').parentElement).addEventListener('click', () => share(G.score));
+  const installBtn = mk('installBtn', 'Install app', document.getElementById('startBtn').parentElement);
+  installBtn.addEventListener('click', openInstall);
+  function updateMenuBtn() { installBtn.hidden = isStandalone() || !(mobile || deferred); }
+  updateMenuBtn();
+
+  if (mobile && !isStandalone() && !getKey(SKIP)) openInstall();
+})();
+</script>
+
 <script>
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
