@@ -131,8 +131,13 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
 .buy{justify-self:start;background:transparent;border:2px solid var(--signal);border-radius:9px;color:var(--signal);padding:4px 14px;font-weight:700;font-size:15px;cursor:pointer;font-variant-numeric:tabular-nums}
 .buy:hover:not(:disabled){background:var(--signal);color:#2a1d00}
 .buy:disabled{border-color:var(--panel-line);color:var(--muted);cursor:default}
-.shop-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:20px;padding-top:14px;border-top:2px solid var(--panel-line)}
-.shop-foot .note{margin:0}
+.shop-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px 20px;margin-top:14px}
+.hull-box{display:grid;gap:5px;flex:1 1 200px;max-width:320px}
+.hull-box .lbl b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.foot-btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.repair{background:var(--good);color:#0f2a14;border:0;border-radius:12px;padding:12px 20px;font-family:var(--f-display);font-size:16px;cursor:pointer;box-shadow:0 4px 0 #4f9a5a;font-variant-numeric:tabular-nums}
+.repair:active{transform:translateY(2px);box-shadow:0 2px 0 #4f9a5a}
+.repair:disabled{background:rgba(255,255,255,.08);color:var(--muted);box-shadow:none;cursor:default;transform:none}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 0}
 .stats div{border-left:3px solid var(--panel-line);padding-left:10px}
 .stats b{display:block;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.15;font-variant-numeric:tabular-nums}
@@ -155,7 +160,11 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
   .shop-head .eyebrow{font-size:11px}
   .shop-funds b{font-size:24px}
   .shop-foot{order:1;margin:0;padding:0;border:0}
-  .shop-foot .primary{padding:8px 18px;font-size:16px}
+  .shop-foot{flex-wrap:nowrap;gap:12px}
+  .shop-foot .primary{padding:8px 16px;font-size:15px}
+  .repair{padding:8px 14px;font-size:14px}
+  .hull-box{gap:3px}
+  .hull-box .bar{height:7px}
   .era-strip{order:2;margin:0;padding:6px 10px;gap:4px}
   .era-top,.era-top b{font-size:13px}
   .era-steps i{height:5px}
@@ -271,16 +280,22 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
       </div>
       <div class="shop-funds"><span class="lbl">Funds</span><b id="shopCash">$0</b></div>
     </div>
+    <div class="shop-foot">
+      <div class="hull-box">
+        <div class="lbl">Health <b id="shopHullVal">100 / 100</b></div>
+        <div class="bar"><span id="shopHullFill"></span></div>
+      </div>
+      <div class="foot-btns">
+        <button id="repairBtn" class="repair" type="button">Repair</button>
+        <button id="launchBtn" class="primary" type="button">Launch wave 2</button>
+      </div>
+    </div>
     <div class="era-strip" id="eraStrip">
       <div class="era-top"><span>Airframe: <b id="eraNow">Biplane</b></span><span id="eraNext">4 upgrades to Prop fighter</span></div>
       <div class="era-steps" id="eraSteps"></div>
     </div>
     <div class="shop-tabs" id="shopTabs" role="tablist" aria-label="Upgrade categories"></div>
     <div class="shop-grid" id="shopGrid"></div>
-    <div class="shop-foot">
-      <p class="note" id="shopHull">Health 80 / 80</p>
-      <button id="launchBtn" class="primary" type="button">Launch wave 2</button>
-    </div>
   </div>
 </section>
 
@@ -432,7 +447,7 @@ const UPS = [
   { id: 'caliber', cat: 'guns', name: 'Heavier rounds', max: 5, cost: l => Math.round(70 * Math.pow(1.7, l)), desc: '+30% bullet damage' },
   { id: 'rate', cat: 'guns', name: 'Faster firing', max: 5, cost: l => Math.round(70 * Math.pow(1.7, l)), desc: 'Guns fire 15% faster' },
   { id: 'barrels', cat: 'guns', name: 'More guns', max: 3, cost: l => [220, 550, 1100][l], desc: 'Go from 1 gun to 2, 3, then 4' },
-  { id: 'guided', cat: 'guns', name: 'Guided rounds', max: 5, cost: l => [180, 350, 600, 950, 1400][l], desc: 'Bullets curve slightly toward enemies ahead' },
+  { id: 'guided', cat: 'guns', name: 'Guided rounds', max: 5, cost: l => [250, 500, 850, 1300, 1900][l], desc: 'Bullets nudge toward enemies just ahead' },
   { id: 'rocketUnlock', cat: 'rockets', name: 'Rocket pods', max: 1, cost: () => 260, desc: 'Fire a rocket salvo straight ahead' },
   { id: 'salvo', cat: 'rockets', name: 'Bigger salvo', max: 3, req: 'rocketUnlock', cost: l => [220, 450, 800][l], desc: '+2 rockets per salvo' },
   { id: 'rocketReload', cat: 'rockets', name: 'Fast rearm', max: 3, req: 'rocketUnlock', cost: l => [200, 420, 750][l], desc: 'Rockets reload 20% faster' },
@@ -563,7 +578,8 @@ function stats() {
     era, gunDmg: 6 * (1 + 0.3 * u.caliber) * E.dmg, gunRate: 0.17 * Math.pow(0.85, u.rate), barrels: 1 + u.barrels, bulletV: 720,
     rockets: u.rocketUnlock > 0, salvo: 2 + 2 * u.salvo, rocketReload: 5 * Math.pow(0.8, u.rocketReload), rocketDmg: 26 * E.dmg,
     missiles: u.missileUnlock > 0, mCount: 1 + u.missileCount, missileReload: 7 * Math.pow(0.8, u.missileReload), missileDmg: 60 * E.dmg,
-    guideCone: [0, 6, 9, 12, 15, 18][u.guided || 0] * Math.PI / 180, guideRate: [0, 0.6, 1.0, 1.4, 1.8, 2.2][u.guided || 0],
+    guideCone: [0, 3, 4, 5, 6, 7][u.guided || 0] * Math.PI / 180, guideRate: [0, 0.25, 0.4, 0.55, 0.7, 0.85][u.guided || 0],
+    guideCap: [0, 1.5, 2, 2.5, 3, 3.5][u.guided || 0] * Math.PI / 180,
     maxHp: 100 + 20 * u.hull + E.hp, armor: 0.08 * u.armor, speed: E.spd * (1 + 0.08 * u.engine), turn: E.turn * (1 + 0.1 * u.engine),
   };
 }
@@ -771,11 +787,6 @@ function renderShop() {
       const desc = locked ? 'Requires ' + UPS.find(x => x.id === u.req).name.toLowerCase() : u.desc;
       h += `<div class="item${locked ? ' is-locked' : ''}"><div class="item-top"><span class="iname">${u.name}</span><span class="pips">${pips}</span></div><p class="idesc">${desc}</p><button class="buy" type="button" data-id="${u.id}"${maxed || locked || !afford ? ' disabled' : ''}>${label}</button></div>`;
     }
-    if (cat === 'air') {
-      const missing = Math.ceil(S.maxHp - p.hp), canHeal = Math.min(missing, Math.floor(G.money / REPAIR_RATE));
-      const label = missing <= 0 ? 'Fully repaired' : canHeal >= missing ? 'Repair $' + fmt(Math.ceil(missing * REPAIR_RATE)) : canHeal > 0 ? 'Repair ' + canHeal + ' for $' + fmt(Math.ceil(canHeal * REPAIR_RATE)) : 'Repair $' + fmt(Math.ceil(missing * REPAIR_RATE));
-      h += `<div class="item"><div class="item-top"><span class="iname">Hangar repair</span></div><p class="idesc">$${REPAIR_RATE.toFixed(2)} per point, ${Math.max(0, missing)} missing. Doesn't count toward airframes.</p><button class="buy" type="button" data-id="repair"${missing <= 0 || canHeal < 1 ? ' disabled' : ''}>${label}</button></div>`;
-    }
     h += '</div>';
   }
   $('shopGrid').innerHTML = h;
@@ -783,7 +794,13 @@ function renderShop() {
     const canBuy = UPS.some(u => u.cat === cat && G.up[u.id] < u.max && !(u.req && !G.up[u.req]) && G.money >= u.cost(G.up[u.id]));
     return `<button type="button" role="tab" class="tab${cat === shopTab ? ' active' : ''}" aria-selected="${cat === shopTab}" data-tab="${cat}">${name}${canBuy ? '<i aria-label="can buy"></i>' : ''}</button>`;
   }).join('');
-  $('shopHull').textContent = 'Health ' + Math.ceil(p.hp) + ' / ' + S.maxHp + (S.armor ? ' · armor ' + Math.round(S.armor * 100) + '%' : '');
+  const missing = Math.max(0, Math.ceil(S.maxHp - p.hp)), canHeal = Math.min(missing, Math.floor(G.money / REPAIR_RATE));
+  $('shopHullVal').textContent = Math.ceil(p.hp) + ' / ' + S.maxHp + (S.armor ? ' · armor ' + Math.round(S.armor * 100) + '%' : '');
+  $('shopHullFill').style.width = (clamp(p.hp / S.maxHp, 0, 1) * 100).toFixed(1) + '%';
+  $('shopHullFill').classList.toggle('low', p.hp / S.maxHp < 0.35);
+  const rb = $('repairBtn');
+  rb.disabled = missing <= 0 || canHeal < 1;
+  rb.textContent = missing <= 0 ? 'Health full' : canHeal < 1 ? 'Repair · need $' + Math.ceil(REPAIR_RATE) : 'Repair +' + canHeal + ' HP · $' + fmt(Math.ceil(canHeal * REPAIR_RATE));
   $('launchBtn').textContent = 'Launch wave ' + (G.wave + 1);
 }
 $('shopGrid').addEventListener('click', e => {
@@ -808,6 +825,12 @@ $('shopGrid').addEventListener('click', e => {
   renderShop();
   const again = $('shopGrid').querySelector(`button[data-id="${id}"]:not(:disabled)`);
   if (again) again.focus();
+});
+$('repairBtn').addEventListener('click', () => {
+  const S = stats(), p = G.player, missing = Math.ceil(S.maxHp - p.hp), heal = Math.min(missing, Math.floor(G.money / REPAIR_RATE));
+  if (heal < 1) return;
+  G.money -= Math.ceil(heal * REPAIR_RATE); p.hp = Math.min(S.maxHp, p.hp + heal);
+  renderShop();
 });
 $('shopTabs').addEventListener('click', e => {
   const t = e.target.closest('button.tab');
@@ -999,7 +1022,7 @@ function update(dt) {
       for (const e of G.enemies) {
         if (e.dead) continue;
         const ex = e.x - b.x, ey = e.y - b.y;
-        if (ex * ex + ey * ey > 600 * 600) continue;
+        if (ex * ex + ey * ey > 400 * 400) continue;
         const off = Math.abs(angDiff(b.a, Math.atan2(ey, ex)));
         if (off < bo) { bo = off; best = e; }
       }
@@ -1007,7 +1030,7 @@ function update(dt) {
         const want = Math.atan2(best.y - b.y, best.x - b.x);
         let na = b.a + clamp(angDiff(b.a, want), -S.guideRate * dt, S.guideRate * dt);
         const total = angDiff(b.a0, na);
-        if (Math.abs(total) > S.guideCone) na = b.a0 + Math.sign(total) * S.guideCone;
+        if (Math.abs(total) > S.guideCap) na = b.a0 + Math.sign(total) * S.guideCap;
         b.a = na; b.vx = Math.cos(na) * b.v; b.vy = Math.sin(na) * b.v;
       }
     }
