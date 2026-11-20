@@ -94,7 +94,17 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
 .note{margin:12px 0 0;font-size:14px;color:var(--muted)}
 .best{font-variant-numeric:tabular-nums}
 
+/* Title screen */
+.menu-panel{display:grid;grid-template-areas:"head" "ctrl" "start"}
+.menu-head{grid-area:head;min-width:0}
+.menu-panel .controls{grid-area:ctrl}
+.menu-start{grid-area:start}
+
 /* Shop */
+.shop-tabs{display:none;gap:6px}
+.tab{position:relative;flex:1;background:rgba(255,255,255,.05);border:2px solid var(--panel-line);border-radius:10px;padding:6px;font-family:var(--f-display);font-size:12px;color:var(--muted);cursor:pointer}
+.tab.active{border-color:var(--signal);color:var(--ink);background:rgba(255,200,61,.12)}
+.tab i{position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--good)}
 .shop-panel{max-width:1060px}
 .shop-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px}
 .shop-funds{text-align:right}
@@ -127,6 +137,44 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
 .stats div{border-left:3px solid var(--panel-line);padding-left:10px}
 .stats b{display:block;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.15;font-variant-numeric:tabular-nums}
 .newbest{color:var(--signal)}
+
+/* Phones held sideways: everything fits on one screen */
+@media (max-height:500px){
+  .overlay{padding-block:8px}
+  .panel{padding:14px 16px;border-radius:14px}
+  .menu-panel{max-width:780px;grid-template-columns:1.1fr 1fr;grid-template-areas:"head ctrl" "start ctrl";column-gap:24px}
+  h1{font-size:40px}
+  .lede{font-size:14px;margin-top:8px}
+  .menu-panel .controls{margin:0;padding:0;border:0;font-size:13px;gap:3px 10px;align-self:center}
+  .menu-panel .controls dt{font-size:12px;margin-top:0}
+  .menu-start .btn-row{margin-top:12px}
+  .menu-start .note{margin-top:6px;font-size:12px}
+  .shop-panel{box-sizing:border-box;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px)}
+  .shop-head{order:0;flex-wrap:nowrap}
+  .shop-head h2{font-size:22px}
+  .shop-head .eyebrow{font-size:11px}
+  .shop-funds b{font-size:24px}
+  .shop-foot{order:1;margin:0;padding:0;border:0}
+  .shop-foot .primary{padding:8px 18px;font-size:16px}
+  .era-strip{order:2;margin:0;padding:6px 10px;gap:4px}
+  .era-top,.era-top b{font-size:13px}
+  .era-steps i{height:5px}
+  .shop-tabs{order:3;display:flex}
+  .shop-grid{order:4;display:block;margin:0;overflow-y:auto;min-height:0;flex:1 1 auto}
+  .shop-grid .cat{display:none}
+  .shop-grid .cat.active{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cat-h{display:none}
+  .item{grid-template-columns:1fr auto;column-gap:10px;row-gap:2px;padding:6px 10px;align-items:center}
+  .item-top,.idesc{grid-column:1}
+  .iname{font-size:15px}
+  .idesc{font-size:12px}
+  .buy{grid-column:2;grid-row:1 / span 2;align-self:center}
+  .hud-hp{width:min(170px,28vw)}
+  .bar{height:8px}
+  .val{font-size:12px}
+  .steer{gap:22px}
+  .tbtn{width:76px;height:76px}
+}
 
 /* Rotate prompt (phones held upright) */
 .rotate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--sea);text-align:center}
@@ -190,10 +238,12 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
 </div>
 
 <section id="menu" class="overlay">
-  <div class="panel">
-    <p class="eyebrow">Endless air combat</p>
-    <h1>Flighter <span>Pilot</span></h1>
-    <p class="lede">Take off in a wood-and-canvas biplane. Your guns never stop firing, so point the nose at trouble. Every kill pays. Upgrade between waves and your plane climbs the eras all the way to a stealth fighter.</p>
+  <div class="panel menu-panel">
+    <div class="menu-head">
+      <p class="eyebrow">Endless air combat</p>
+      <h1>Flighter <span>Pilot</span></h1>
+      <p class="lede">Take off in a biplane. Your guns never stop firing, so point the nose at trouble. Upgrade between waves and climb the eras to a stealth fighter.</p>
+    </div>
     <dl class="controls">
       <dt>Turn</dt><dd>◀ ▶ buttons, or <kbd>A</kbd> <kbd>D</kbd> / arrow keys</dd>
       <dt>Guns</dt><dd>Always firing straight ahead</dd>
@@ -202,11 +252,13 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
       <dt>Boost</dt><dd>Barrel-roll dash, can't be hit while rolling. Boost button, or <kbd>Shift</kbd> <kbd>W</kbd> / up arrow</dd>
       <dt>Pause</dt><dd>II button, or <kbd>Esc</kbd></dd>
     </dl>
-    <div class="btn-row">
-      <button id="startBtn" class="primary" type="button">Take off</button>
-      <span class="note best" id="menuBest"></span>
+    <div class="menu-start">
+      <div class="btn-row">
+        <button id="startBtn" class="primary" type="button">Take off</button>
+        <span class="note best" id="menuBest"></span>
+      </div>
+      <p class="note">Best on a phone held sideways.</p>
     </div>
-    <p class="note">Best on a phone held sideways.</p>
   </div>
 </section>
 
@@ -223,6 +275,7 @@ kbd{font-family:var(--f-ui);font-weight:700;font-size:13px;border:1px solid var(
       <div class="era-top"><span>Airframe: <b id="eraNow">Biplane</b></span><span id="eraNext">4 upgrades to Prop fighter</span></div>
       <div class="era-steps" id="eraSteps"></div>
     </div>
+    <div class="shop-tabs" id="shopTabs" role="tablist" aria-label="Upgrade categories"></div>
     <div class="shop-grid" id="shopGrid"></div>
     <div class="shop-foot">
       <p class="note" id="shopHull">Health 80 / 80</p>
@@ -367,12 +420,13 @@ for (let i = 0; i < CLOUD_N; i++) {
 
 /* ---------- definitions ---------- */
 const ERAS = [
-  { name: 'Biplane', spd: 200, turn: 2.9, hp: 0, dmg: 1 },
-  { name: 'Prop fighter', spd: 240, turn: 2.75, hp: 15, dmg: 1.1 },
-  { name: 'Early jet', spd: 285, turn: 2.6, hp: 30, dmg: 1.2 },
-  { name: 'Supersonic jet', spd: 330, turn: 2.5, hp: 45, dmg: 1.3 },
-  { name: 'Stealth fighter', spd: 370, turn: 2.6, hp: 60, dmg: 1.45 },
+  { name: 'Biplane', spd: 245, turn: 3.4, hp: 0, dmg: 1 },
+  { name: 'Prop fighter', spd: 275, turn: 3.1, hp: 15, dmg: 1.1 },
+  { name: 'Early jet', spd: 310, turn: 2.8, hp: 30, dmg: 1.2 },
+  { name: 'Supersonic jet', spd: 345, turn: 2.6, hp: 45, dmg: 1.3 },
+  { name: 'Stealth fighter', spd: 380, turn: 2.65, hp: 60, dmg: 1.45 },
 ];
+const ENEMY_SPD = [200, 240, 285, 330, 370]; // enemies keep the original era speeds
 const ERA_AT = [0, 4, 9, 15, 22];
 const UPS = [
   { id: 'caliber', cat: 'guns', name: 'Heavier rounds', max: 5, cost: l => Math.round(70 * Math.pow(1.7, l)), desc: '+30% bullet damage' },
@@ -660,7 +714,7 @@ function spawnEnemy(type, near) {
   const era = Math.min(4, Math.floor((G.wave - 1) / 4));
   const hpMul = 1 + 0.08 * (G.wave - 1);
   G.enemies.push({
-    type, era, x, y, a: Math.atan2(p.y - y, p.x - x), spd: ERAS[era].spd * T.spd, bank: 0, r: T.r,
+    type, era, x, y, a: Math.atan2(p.y - y, p.x - x), spd: ENEMY_SPD[era] * T.spd, bank: 0, r: T.r,
     hp: T.hp * hpMul, maxHp: T.hp * hpMul, dir: Math.random() < 0.5 ? 1 : -1, dirT: rand(4, 9),
     cd: rand(1.5, 3), burst: 0, burstT: 0, evade: 0, evadeA: 0, ramT: 0, trailT: 0,
     turrets: (T.turrets || []).map(([ox, oy]) => ({ ox, oy, a: 0, cd: rand(1.5, 3) })),
@@ -694,6 +748,7 @@ function toMenu() {
 }
 
 /* ---------- shop ---------- */
+let shopTab = 'guns';
 function renderShop() {
   const S = stats(), p = G.player, tot = totalUps();
   $('shopCash').textContent = '$' + fmt(G.money);
@@ -707,7 +762,7 @@ function renderShop() {
   $('eraSteps').innerHTML = ERAS.map((_, i) => `<i class="${i <= S.era ? 'on' : ''}"></i>`).join('');
   let h = '';
   for (const [cat, name, sub] of CATS) {
-    h += `<div class="cat"><div class="cat-h"><h3>${name}</h3><span>${sub}</span></div>`;
+    h += `<div class="cat${cat === shopTab ? ' active' : ''}"><div class="cat-h"><h3>${name}</h3><span>${sub}</span></div>`;
     for (const u of UPS.filter(x => x.cat === cat)) {
       const lvl = G.up[u.id], maxed = lvl >= u.max, locked = !!(u.req && !G.up[u.req]);
       const cost = maxed ? 0 : u.cost(lvl), afford = G.money >= cost;
@@ -724,6 +779,10 @@ function renderShop() {
     h += '</div>';
   }
   $('shopGrid').innerHTML = h;
+  $('shopTabs').innerHTML = CATS.map(([cat, name]) => {
+    const canBuy = UPS.some(u => u.cat === cat && G.up[u.id] < u.max && !(u.req && !G.up[u.req]) && G.money >= u.cost(G.up[u.id]));
+    return `<button type="button" role="tab" class="tab${cat === shopTab ? ' active' : ''}" aria-selected="${cat === shopTab}" data-tab="${cat}">${name}${canBuy ? '<i aria-label="can buy"></i>' : ''}</button>`;
+  }).join('');
   $('shopHull').textContent = 'Health ' + Math.ceil(p.hp) + ' / ' + S.maxHp + (S.armor ? ' · armor ' + Math.round(S.armor * 100) + '%' : '');
   $('launchBtn').textContent = 'Launch wave ' + (G.wave + 1);
 }
@@ -749,6 +808,11 @@ $('shopGrid').addEventListener('click', e => {
   renderShop();
   const again = $('shopGrid').querySelector(`button[data-id="${id}"]:not(:disabled)`);
   if (again) again.focus();
+});
+$('shopTabs').addEventListener('click', e => {
+  const t = e.target.closest('button.tab');
+  if (!t) return;
+  shopTab = t.dataset.tab; renderShop();
 });
 $('startBtn').addEventListener('click', () => { tryLandscape(); newRun(); });
 $('launchBtn').addEventListener('click', startWave);
@@ -1012,7 +1076,7 @@ function update(dt) {
 }
 
 /* ---------- drawing ---------- */
-const OCEAN_F = 0.45;
+const OCEAN_F = 0.7;
 function drawLayer(tile, wx, wy, sc) {
   const s = Math.max(16, Math.round(tile.width * Z * sc));
   const ox = Math.round(((((-wx * Z + W / 2) % s) + s) % s) - s), oy = Math.round(((((-wy * Z + H / 2) % s) + s) % s) - s);
@@ -1230,8 +1294,8 @@ function render(dt) {
   ctx.globalAlpha = 1;
   drawGlints(ox, oy);
   // low clouds and their shadows
-  drawClouds(0.72, 0.85, 3, 0.36, 0.16, true);
-  drawClouds(0.72, 0.85, 3, 0.36, 0.92, false);
+  drawClouds(0.85, 0.85, 3, 0.36, 0.16, true);
+  drawClouds(0.85, 0.85, 3, 0.36, 0.92, false);
 
   const shx = G.shake ? rand(-G.shake, G.shake) : 0, shy = G.shake ? rand(-G.shake, G.shake) : 0;
   ctx.setTransform(DPR * Z, 0, 0, DPR * Z, DPR * (W / 2 - G.cam.x * Z + shx), DPR * (H / 2 - G.cam.y * Z + shy));
@@ -1327,8 +1391,8 @@ function render(dt) {
       }
     }
     // radar
-    const small = W < 700 || H < 500, rr2 = small ? 36 : 54;
-    const rcx = W - rr2 - Math.max(16, 0), rcy = (small ? 96 : 116) + rr2, range = 1600;
+    const phone = H < 500, small = W < 700 || phone, rr2 = phone ? 30 : small ? 36 : 54;
+    const rcx = W - rr2 - 16, rcy = (phone ? 82 : small ? 96 : 116) + rr2, range = 1600;
     ctx.fillStyle = 'rgba(6,26,38,0.7)'; ctx.beginPath(); ctx.arc(rcx, rcy, rr2, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(98,212,227,0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(rcx, rcy, rr2 * 0.5, 0, TAU); ctx.stroke();

@@ -2,7 +2,7 @@
 
 Endless top-down air combat in the browser. Take off in a biplane, shoot down waves of enemy planes, spend your prize money on upgrades, and climb the eras all the way to a stealth fighter.
 
-**Play:** https://jdmrt.github.io/flighter-pilot/
+**Play:** https://jdmrt.github.io/Flighter-Pilot/
 
 ## Install it like an app
 - **iPhone (Safari):** open the link, tap **Share**, then **Add to Home Screen**.
